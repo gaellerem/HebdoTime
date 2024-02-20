@@ -8,99 +8,65 @@ DAYS_OF_WEEK = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
 BREAK_IN_MINUTES = 60
 WEEKLY_WORK_TIME = 2310
 
+
 class Model:
     def __init__(self):
-        self.__hours_arrival = {day: 0 for day in DAYS_OF_WEEK}
-        self.__minutes_arrival = {day: 0 for day in DAYS_OF_WEEK}
-        self.__hours_departure = {day: 0 for day in DAYS_OF_WEEK}
-        self.__minutes_departure = {day: 0 for day in DAYS_OF_WEEK}
-        self.__time = {day: (0,0) for day in DAYS_OF_WEEK}
+        self.reset()
 
     @property
-    def hours_departure(self):
-        return self.__hours_departure
+    def arrivals(self):
+        return self.__arrivals
 
     @property
-    def minutes_departure(self):
-        return self.__minutes_departure
+    def departures(self):
+        return self.__departures
 
-    @property
-    def hours_arrival(self):
-        return self.__hours_arrival
-
-    @property
-    def minutes_arrival(self):
-        return self.__minutes_arrival
-    
     @property
     def time(self):
         return self.__time
 
-    @hours_arrival.setter
-    def hours_arrival(self, values):
-        hours_arrival = {}
+    @arrivals.setter
+    def arrivals(self, values):
+        arrivals = {}
         errors = []
-        for day, value in values.items() :
-            if value.isdigit():
-                value = int(value)
-                if value >= 0 and value <= 24:
-                    hours_arrival[day] = value
+        for day, (hours, minutes) in values.items() :
+            if hours.isdigit() and minutes.isdigit():
+                hours = int(hours)
+                minutes = int(minutes)
+                if hours >= 0 and hours <= 24 and minutes >= 0 and minutes <= 60:
+                    arrivals[day] = (hours, minutes)
                     continue
             errors.append(day)
         if len(errors) != 0 :
             raise ValueError(errors)
-        self.__hours_arrival = hours_arrival
-    
-    @minutes_arrival.setter
-    def minutes_arrival(self, values):
-        minutes_arrival = {}
+        self.__arrivals = arrivals
+
+    @departures.setter
+    def departures(self, values):
+        departures = {}
         errors = []
-        for day, value in values.items() : 
-            if value.isdigit():
-                value = int(value)
-                if value >= 0 and value <= 60:
-                    minutes_arrival[day] = value
+        for day, (hours, minutes) in values.items() :
+            if hours.isdigit() and minutes.isdigit():
+                hours = int(hours)
+                minutes = int(minutes)
+                if hours >= 0 and hours <= 24 and minutes >= 0 and minutes <= 60:
+                    departures[day] = (hours, minutes)
                     continue
             errors.append(day)
         if len(errors) != 0 :
             raise ValueError(errors)
-        self.__minutes_arrival = minutes_arrival
-    
-    @hours_departure.setter
-    def hours_departure(self, values):
-        hours_departure = {}
-        errors = []
-        for day, value in values.items() : 
-            if value.isdigit():
-                value = int(value)
-                if value >= 0 and value <= 24 :
-                    hours_departure[day] = value
-                    continue
-            errors.append(day)
-        if len(errors) != 0 :
-            raise ValueError(errors)
-        self.__hours_departure = hours_departure
-    
-    @minutes_departure.setter
-    def minutes_departure(self, values):
-        minutes_departure = {}
-        errors = []
-        for day, value in values.items() : 
-            if value.isdigit():
-                value = int(value)
-                if value >= 0 and value <= 60:
-                    minutes_departure[day] = value
-                    continue
-            errors.append(day)
-        if len(errors) != 0 :
-            raise ValueError(errors)
-        self.__minutes_departure = minutes_departure
+        self.__departures = departures
+
+    def reset(self):
+        self.__arrivals = {day: (0,0) for day in DAYS_OF_WEEK}
+        self.__departures = {day: (0,0) for day in DAYS_OF_WEEK}
+        self.__time = {day: (0,0) for day in DAYS_OF_WEEK}
 
     def process(self):
-        def calculate_time(hours_arrival, minutes_arrival, hours_departure, minutes_departure):
+        def calculate_time(arrival, departure):
             nonlocal total_minutes
-            hours = hours_departure - hours_arrival
-            minutes = minutes_departure - minutes_arrival - BREAK_IN_MINUTES
+            hours = departure[0] - arrival[0]
+            minutes = departure[1] - arrival[1] - BREAK_IN_MINUTES
             while minutes < 0 :
                 minutes += 60
                 hours -=1
@@ -109,18 +75,21 @@ class Model:
             total_minutes += hours * 60 + minutes
             return (hours, minutes)
         
-        def calculate_total(minutes):
-            hours = minutes // 60
-            minutes = minutes % 60
-            return (hours, minutes)
+        def calculate_total(total_minutes):
+            hours = abs(total_minutes) // 60
+            minutes = abs(total_minutes) % 60
+            if total_minutes > 0 :
+                return (hours, minutes) 
+            elif hours == 0 :
+                return (hours, -minutes)
+            else :
+                return (-hours, minutes)
         
         total_minutes = 0
         for day in DAYS_OF_WEEK :
             self.__time[day] = calculate_time(
-                self.hours_arrival[day], 
-                self.minutes_arrival[day], 
-                self.hours_departure[day], 
-                self.minutes_departure[day]
+                self.arrivals[day],
+                self.departures[day]
             )
         
         time_left = WEEKLY_WORK_TIME - total_minutes
@@ -131,10 +100,8 @@ class Model:
         data = {}
         for day in DAYS_OF_WEEK:
             data[day] = {
-                "hours_arrival": self.hours_arrival[day],
-                "minutes_arrival": self.minutes_arrival[day],
-                "hours_departure": self.hours_departure[day],
-                "minutes_departure": self.minutes_departure[day],
+                "arrivals": self.arrivals[day],
+                "departures": self.departures[day],
             }
 
         with open("data.txt", "w") as f:
@@ -145,19 +112,33 @@ class Model:
             with open("data.txt", "r") as f:
                 data = json.load(f)
             for day in DAYS_OF_WEEK:
-                self.hours_arrival[day] = data[day]["hours_arrival"]
-                self.minutes_arrival[day] = data[day]["minutes_arrival"]
-                self.hours_departure[day] = data[day]["hours_departure"]
-                self.minutes_departure[day] = data[day]["minutes_departure"]
+                try :
+                    self.arrivals[day] = data[day]["arrivals"]
+                    self.departures[day] = data[day]["departures"]
+                except KeyError:
+                    self.arrivals[day] = (0,0)
+                    self.departures[day] = (0,0)
         except FileNotFoundError:
             pass
-    
+
     def get_data(self):
-        return [self.hours_arrival, self.minutes_arrival, self.hours_departure, self.minutes_departure]
+        return [self.arrivals, self.departures]
+
 
 class View(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+
+        style = ttk.Style()
+        style.configure("TLabel", font=("Helvetica", 12))
+        style.configure("TButton", font=("Helvetica", 12))
+
+        menu_bar = tk.Menu(parent)
+        parent.config(menu=menu_bar)
+
+        sub_menu = tk.Menu(menu_bar, tearoff=0)
+        sub_menu.add_command(label="Réinitialiser", command=self.reset_menu_clicked)
+        menu_bar.add_cascade(label="Options", menu = sub_menu)
 
         self.var_hours_arrival : dict [str, tk.StringVar] = {}
         self.var_minutes_arrival : dict [str, tk.StringVar] = {}
@@ -171,11 +152,10 @@ class View(ttk.Frame):
         ttk.Label(self, text="Temps de\ntravail", justify=tk.CENTER).grid(row=0, column=7, columnspan=2)
 
         ttk.Label(self, text=" ").grid(row=0, rowspan=8, column=3, padx=2)
-        
+
+        options = {'width' : 4, 'font' : ("Helvetica", 12)}
         for i, day in enumerate(DAYS_OF_WEEK, 1):
             ttk.Label(self, text=day + ':').grid(row=i, column=0, padx=10)
-            
-            options = {'width' : 4, 'font' : ("Helvetica", 12)}
 
             # arrival hours entry
             self.var_hours_arrival[day] = tk.StringVar()
@@ -214,28 +194,32 @@ class View(ttk.Frame):
 
     def update_view(self, data): 
         for day in DAYS_OF_WEEK:
-            self.var_hours_arrival[day].set(data[0][day])
-            self.var_minutes_arrival[day].set(data[1][day])
-            self.var_hours_departure[day].set(data[2][day])
-            self.var_minutes_departure[day].set(data[3][day])
+            self.var_hours_arrival[day].set(data[0][day][0])
+            self.var_minutes_arrival[day].set("{:02d}".format(data[0][day][1]))
+            self.var_hours_departure[day].set(data[1][day][0])
+            self.var_minutes_departure[day].set("{:02d}".format(data[1][day][1]))
     
     def set_controller(self, controller):
         self.controller = controller
 
+    def reset_menu_clicked(self):
+        if self.controller:
+            self.controller.reset()
+        for day in DAYS_OF_WEEK:
+            self.var_hours_arrival[day].set(0)
+            self.var_minutes_arrival[day].set(0)
+            self.var_hours_departure[day].set(0)
+            self.var_minutes_departure[day].set(0)
+
     def validate_button_clicked(self):
         if self.controller:
-            hours_arrival = {}
-            minutes_arrival = {}
-            hours_departure = {}
-            minutes_departure = {}
+            arrivals = {}
+            departures = {}
             for day in DAYS_OF_WEEK:
                 self.error_labels[day]['text'] = "        "
-                hours_arrival[day] = self.var_hours_arrival.get(day).get()
-                minutes_arrival[day] = self.var_minutes_arrival.get(day).get()
-                hours_departure[day] = self.var_hours_departure.get(day).get()
-                minutes_departure[day] = self.var_minutes_departure.get(day).get()
-            
-            self.controller.validate(hours_arrival, minutes_arrival, hours_departure, minutes_departure)
+                arrivals[day] = (self.var_hours_arrival.get(day).get(), self.var_minutes_arrival.get(day).get())
+                departures[day] = (self.var_hours_departure.get(day).get(), self.var_minutes_departure.get(day).get())
+            self.controller.validate(arrivals, departures)
 
     def show_error(self, days):
         for day in days :
@@ -261,12 +245,10 @@ class Controller:
         self.model = model
         self.view = view
 
-    def validate(self, hours_arrival, minutes_arrival, hours_departure, minutes_departure):
+    def validate(self, arrivals, departures):
         try:
-            self.model.hours_arrival = hours_arrival
-            self.model.minutes_arrival = minutes_arrival
-            self.model.hours_departure = hours_departure
-            self.model.minutes_departure = minutes_departure
+            self.model.arrivals = arrivals
+            self.model.departures = departures
 
             self.model.process()
             
@@ -275,6 +257,9 @@ class Controller:
         except ValueError as error:
             days, *_ = error.args
             self.view.show_error(days)
+
+    def reset(self):
+        self.model.reset()
 
     def save_data(self):
         self.view.validate_button_clicked()
@@ -292,10 +277,7 @@ class App(tk.Tk):
 
         self.title('HebdoTime')
         self.tk.call("wm", "iconphoto", self._w, tk.PhotoImage(file=os.path.join(BASE_PATH, "icon.png")))
-        
-        style = ttk.Style()
-        style.configure("TLabel", font=("Helvetica", 12))
-        style.configure("TButton", font=("Helvetica", 12))
+
         # create a model
         model = Model()
 
