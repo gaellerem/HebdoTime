@@ -1,0 +1,4 @@
+get customtkinter library path :
+pip show customtkinter
+
+pyinstaller --onedir --windowed --add-data "<Path>/customtkinter:customtkinter/" app.py
