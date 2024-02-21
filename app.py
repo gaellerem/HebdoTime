@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk
 
 DAYS_OF_WEEK = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
 BREAK_IN_MINUTES = 60
@@ -125,71 +125,63 @@ class Model:
         return [self.arrivals, self.departures]
 
 
-class View(ttk.Frame):
+class View(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent)
-
-        style = ttk.Style()
-        style.configure("TLabel", font=("Helvetica", 12))
-        style.configure("TButton", font=("Helvetica", 12))
-
-        menu_bar = tk.Menu(parent)
-        parent.config(menu=menu_bar)
-
-        sub_menu = tk.Menu(menu_bar, tearoff=0)
-        sub_menu.add_command(label="Réinitialiser", command=self.reset_menu_clicked)
-        menu_bar.add_cascade(label="Options", menu = sub_menu)
 
         self.var_hours_arrival : dict [str, tk.StringVar] = {}
         self.var_minutes_arrival : dict [str, tk.StringVar] = {}
         self.var_hours_departure : dict [str, tk.StringVar] = {}
         self.var_minutes_departure : dict [str, tk.StringVar] = {}
-        self.error_labels : dict [str, ttk.Label] = {}
-        self.work_time : dict [str, ttk.Label] = {}
+        self.error_labels : dict [str, ctk.CTkLabel] = {}
+        self.work_time : dict [str, ctk.CTkLabel] = {}
 
-        ttk.Label(self, text="Arrivée").grid(row=0, column=1, columnspan=2)
-        ttk.Label(self, text="Départ").grid(row=0, column=4, columnspan=2)
-        ttk.Label(self, text="Temps de\ntravail", justify=tk.CENTER).grid(row=0, column=7, columnspan=2)
+        my_font = ctk.CTkFont(family="Helvetica", size=16)
 
-        ttk.Label(self, text=" ").grid(row=0, rowspan=8, column=3, padx=2)
+        ctk.CTkLabel(self, text="Arrivée", font=my_font).grid(row=0, column=1, columnspan=2)
+        ctk.CTkLabel(self, text="Départ", font=my_font).grid(row=0, column=4, columnspan=2)
+        ctk.CTkLabel(self, text="Temps de\ntravail", font=my_font).grid(row=0, column=7, padx=5, pady=5)
 
-        options = {'width' : 4, 'font' : ("Helvetica", 12)}
+        ctk.CTkLabel(self, text="   ").grid(row=0, rowspan=8, column=3, padx=2)
+        ctk.CTkLabel(self, text="   ").grid(row=0, rowspan=8, column=8, padx=3)
+        options = {"width" : 45, "height" : 30, "font" : my_font}
+        
         for i, day in enumerate(DAYS_OF_WEEK, 1):
-            ttk.Label(self, text=day + ':').grid(row=i, column=0, padx=10)
+            ctk.CTkLabel(self, text=day + ':', font=my_font).grid(row=i, column=0, padx=10)
 
             # arrival hours entry
             self.var_hours_arrival[day] = tk.StringVar()
-            ttk.Entry(self, textvariable=self.var_hours_arrival.get(day), **options).grid(row=i, column=1, sticky=tk.NSEW, pady=3)
+            ctk.CTkEntry(self, textvariable=self.var_hours_arrival.get(day), **options).grid(row=i, column=1, sticky=tk.NSEW, pady=3)
 
             # arrival minutes entry
             self.var_minutes_arrival[day] = tk.StringVar()
-            ttk.Entry(self, textvariable=self.var_minutes_arrival.get(day), **options).grid(row=i, column=2, sticky=tk.NSEW, pady=3)
+            ctk.CTkEntry(self, textvariable=self.var_minutes_arrival.get(day), **options).grid(row=i, column=2, sticky=tk.NSEW, pady=3)
 
             # departure hours entry
             self.var_hours_departure[day] = tk.StringVar()
-            ttk.Entry(self, textvariable=self.var_hours_departure.get(day), **options).grid(row=i, column=4, sticky=tk.NSEW, pady=3)
+            ctk.CTkEntry(self, textvariable=self.var_hours_departure.get(day), **options).grid(row=i, column=4, sticky=tk.NSEW, pady=3)
 
             # departure minutes entry
             self.var_minutes_departure[day] = tk.StringVar()
-            ttk.Entry(self, textvariable=self.var_minutes_departure.get(day), **options).grid(row=i, column=5, sticky=tk.NSEW, pady=3)
+            ctk.CTkEntry(self, textvariable=self.var_minutes_departure.get(day), **options).grid(row=i, column=5, sticky=tk.NSEW, pady=3)
 
-            self.error_labels[day] = ttk.Label(self, text = "     ")
+            self.error_labels[day] = ctk.CTkLabel(self, text = "     ", font=my_font)
             self.error_labels[day].grid(row=i, column=6, pady=3, padx=5)
 
-            self.work_time[day] = ttk.Label(self, text = "    ")
+            self.work_time[day] = ctk.CTkLabel(self, text = "    ", font=my_font)
             self.work_time[day].grid(row=i, column=7, pady=3, padx=5)
 
-        ttk.Button(self, text='Valider', command=self.validate_button_clicked).grid(row=6, column=0, columnspan=5, pady=6)
+        ctk.CTkButton(self, text='Valider', command=self.validate_button_clicked, width = 100, font=my_font).grid(row=6, column=0, columnspan=3, pady=6)
+        ctk.CTkButton(self, text='Réinitialiser', command=self.reset_clicked, width = 100, font=my_font).grid(row=7, column=0, columnspan=3, pady=6)
 
-        ttk.Label(self, text="Total").grid(row=6, column=5, columnspan=2)
-        self.total_work_time = ttk.Label(self, text="     ")
+        ctk.CTkLabel(self, text="Total", font=my_font).grid(row=6, column=4, columnspan=3)
+        self.total_work_time = ctk.CTkLabel(self, text="     ", font=my_font)
         self.total_work_time.grid(row=6, column=7, pady=3, padx=5)
 
-        ttk.Label(self, text="Temps restant").grid(row=7, column=4, columnspan=3)
-        self.left_work_time = ttk.Label(self, text="     ")
+        ctk.CTkLabel(self, text="Temps restant", font=my_font).grid(row=7, column=4, columnspan=3)
+        self.left_work_time = ctk.CTkLabel(self, text="     ", font=my_font)
         self.left_work_time.grid(row=7, column=7, pady=3, padx=5)
 
-        # set the controller
         self.controller = None
 
     def update_view(self, data): 
@@ -202,7 +194,7 @@ class View(ttk.Frame):
     def set_controller(self, controller):
         self.controller = controller
 
-    def reset_menu_clicked(self):
+    def reset_clicked(self):
         if self.controller:
             self.controller.reset()
         for day in DAYS_OF_WEEK:
@@ -223,18 +215,18 @@ class View(ttk.Frame):
 
     def show_error(self, days):
         for day in days :
-            self.error_labels[day]['text'] = "Invalid value(s)"
+            self.error_labels[day].configure(text="Invalid value(s)")
             self.error_labels[day]['foreground'] = 'red'
             self.error_labels[day].after(5000, lambda: self.hide_message(day))
 
     def show_time(self, time : dict):
         for key, (hours, minutes) in time.items() :
             if key == "Total":
-                self.total_work_time['text'] = f"{hours}:"+"{:02d}".format(minutes)
+                self.total_work_time.configure(text=f"{hours}:"+"{:02d}".format(minutes))
             elif key == "Left" :
-                self.left_work_time['text'] = f"{hours}:"+"{:02d}".format(minutes)
+                self.left_work_time.configure(text=f"{hours}:"+"{:02d}".format(minutes))
             else :
-                self.work_time[key]['text'] = f"{hours}:"+"{:02d}".format(minutes)
+                self.work_time[key].configure(text=f"{hours}:"+"{:02d}".format(minutes))
 
     def hide_message(self, day):
         self.error_labels[day]['text'] = "        "
@@ -271,19 +263,21 @@ class Controller:
         self.view.update_view(self.model.get_data())
 
 
-class App(tk.Tk):
+class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         self.title('HebdoTime')
-        self.tk.call("wm", "iconphoto", self._w, tk.PhotoImage(file=os.path.join(BASE_PATH, "icon.png")))
+        #self.geometry("420x320")
+        self.grid_rowconfigure(0, weight=1)  # configure grid system
+        self.grid_columnconfigure(0, weight=1)
 
         # create a model
         model = Model()
 
         # create a view and place it on the root window
         view = View(self)
-        view.grid(row=0, column=0, padx=10, pady=10)
+        view.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
         # create a controller
         controller = Controller(model, view)
