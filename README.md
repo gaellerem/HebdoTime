@@ -4,3 +4,4 @@ Il permet de renseigner ses horaires d'arrivée et de départ, soustrait automat
 Basé sur un taux horaire 38,5h par semaine, il vous indique combien de temps il reste à faire pour compléter ce taux.
 Les entrées sont enregistrées pour que les données restent accessibles si l'outils est fermé.
 
+Exercice personnel de développement respectant le modèle MVC
